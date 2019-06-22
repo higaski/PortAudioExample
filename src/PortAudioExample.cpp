@@ -1,10 +1,10 @@
+#include <portaudio.h>
 #include <array>
-#include <iostream>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <cstdint>
+#include <iostream>
 #include <vector>
-#include <portaudio.h>
 #include "wav_header.hpp"
 
 /// Length of data
@@ -65,13 +65,13 @@ static int paCallback(void const* input,
                       PaStreamCallbackTimeInfo const* timeInfo,
                       PaStreamCallbackFlags statusFlags,
                       void* userData) {
-  WavHeader* wav_header{reinterpret_cast<WavHeader*>(userData)};
+  WavHeader* wav_header{static_cast<WavHeader*>(userData)};
 
   unsigned int n{data_length >= frameCount ? frameCount : data_length};
 
   // 8 bit
   if (wav_header->bit_depth == 8) {
-    uint8_t* out{reinterpret_cast<uint8_t*>(output)};
+    uint8_t* out{static_cast<uint8_t*>(output)};
 
     // Assuming 8 bit is always mono
     for (auto i{0ul}; i < n; ++i) {
@@ -80,7 +80,9 @@ static int paCallback(void const* input,
     }
     // 16 bit
   } else if (wav_header->bit_depth == 16) {
-    int16_t* out{reinterpret_cast<int16_t*>(output)};
+    int16_t* out{static_cast<int16_t*>(output)};
+
+    // THIS IS UB! DONT do that in production
     int16_t* in_cpy{reinterpret_cast<int16_t*>(in)};
 
     // Assuming 16 bit is stereo
